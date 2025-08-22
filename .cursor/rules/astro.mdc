@@ -1,0 +1,476 @@
+# Reglas de Astro 5 para Pinwheel Astro
+
+## Arquitectura y Renderizado
+
+### Sitio Estático (SSG)
+- **Hosting**: Sitio completamente estático - puede subirse a hosting básico como Hostinger
+- **Sin SSR**: No usa `output: 'server'` ni adaptadores de servidor
+- **Build**: Genera carpeta `dist/` estática con `pnpm build`
+
+### Componentes y Layouts
+- **Layout base**: Usa `src/layouts/Base.astro` como wrapper principal
+- **Layouts específicos**: Crea layouts especializados cuando sea necesario
+- **Props tipadas**: Siempre define `interface Props` para componentes
+
+```astro
+---
+import BaseLayout from "@/layouts/Base.astro";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  title: string;
+  meta_title?: string;
+  description?: string;
+  image?: string;
+  post?: CollectionEntry<"blog">;
+}
+
+const { 
+  title, 
+  meta_title, 
+  description, 
+  image,
+  post 
+} = Astro.props;
+---
+
+<BaseLayout 
+  title={title}
+  meta_title={meta_title}
+  description={description}
+  image={image}
+>
+  <!-- Contenido de la página -->
+</BaseLayout>
+```
+
+## Content Collections (Content Layer API)
+
+### Definición de Colecciones
+- **Ubicación**: Define colecciones en `src/content.config.ts`
+- **Loaders**: Usa `glob()` y `file()` loaders nativos de Astro 5
+- **Schemas**: Siempre define schemas con Zod para validación
+
+```ts
+import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders';
+
+const blog = defineCollection({
+  loader: glob({ 
+    pattern: "**/*.md", 
+    base: "./src/content/blog" 
+  }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    pubDate: z.coerce.date(),
+    featured: z.boolean().default(false),
+    tags: z.array(z.string()).default([]),
+    draft: z.boolean().default(false),
+    image: z.string().optional(),
+    author: z.string().optional(),
+  })
+});
+
+export const collections = {
+  blog,
+  careers: defineCollection({
+    loader: glob({ 
+      pattern: "**/*.md", 
+      base: "./src/content/careers" 
+    }),
+    schema: z.object({
+      title: z.string(),
+      position: z.string(),
+      location: z.string(),
+      type: z.enum(["full-time", "part-time", "contract"]),
+      salary: z.string().optional(),
+      description: z.string(),
+      requirements: z.array(z.string()),
+      benefits: z.array(z.string()).optional(),
+      published: z.coerce.date(),
+    })
+  })
+};
+```
+
+### Consultas de Contenido
+- **getCollection**: Usa para obtener todas las entradas de una colección
+- **getEntry**: Usa para obtener una entrada específica
+- **Filtrado**: Ordena manualmente las colecciones (no garantizan orden)
+- **Tipado**: Usa `CollectionEntry<"collection">` para props
+
+```astro
+---
+import { getCollection, getEntry } from 'astro:content';
+
+// Obtener todas las entradas del blog
+const posts = (await getCollection('blog'))
+  .filter(post => !post.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// Obtener entrada específica
+const featuredPost = await getEntry('blog', 'post-1');
+---
+
+<!-- Renderizar contenido -->
+{posts.map(post => (
+  <article>
+    <h2>{post.data.title}</h2>
+    <p>{post.data.description}</p>
+  </article>
+))}
+```
+
+### Archivos de Índice
+- **Convención**: Usa `-index.md(x)` para páginas índice de colección
+- **Rutas**: Los archivos `-index` se mapean a la ruta raíz de la colección
+- **Ejemplo**: `src/content/blog/-index.md` → `/blog/`
+
+## Islas de React (Componentes Interactivos)
+
+### Principios de Hidratación
+- **Astro por defecto**: Renderiza HTML estático
+- **React solo cuando es necesario**: Usa para interactividad real
+- **Directivas apropiadas**: Elige la directiva de hidratación correcta
+
+### Directivas de Hidratación
+- **`client:load`**: Para interacción inmediata (formularios críticos, navegación)
+- **`client:idle`**: Para componentes diferibles (widgets, carruseles)
+- **`client:visible`**: Para contenido que entra en viewport (lazy loading)
+- **`client:media`**: Para componentes condicionales según media queries
+
+```astro
+---
+import ContactForm from "@/function-components/ContactForm.jsx";
+import ImageCarousel from "@/function-components/ImageCarousel.jsx";
+import NewsletterWidget from "@/function-components/NewsletterWidget.jsx";
+---
+
+<!-- Formulario crítico - hidratación inmediata -->
+<ContactForm client:load />
+
+<!-- Carrusel - hidratación cuando sea visible -->
+<ImageCarousel client:visible />
+
+<!-- Widget - hidratación diferida -->
+<NewsletterWidget client:idle />
+```
+
+### Ubicación de Componentes React
+- **Directorio**: Coloca en `src/layouts/function-components/`
+- **Nomenclatura**: Usa PascalCase y nombres descriptivos
+- **Importaciones**: Usa alias `@/function-components/`
+
+## MDX y Shortcodes
+
+### Componentes en MDX
+- **Auto-imports**: No dupliques imports definidos en `astro.config.mjs`
+- **Shortcodes**: Usa para componentes reutilizables en contenido
+- **Hidratación**: Añade `client:*` si el componente es interactivo
+
+```mdx
+---
+title: "Mi Post en MDX"
+description: "Post con componentes interactivos"
+---
+
+# Título del Post
+
+<NewsletterSignup client:visible />
+
+<CallToAction 
+  title="¿Te gustó este post?"
+  buttonText="Compartir"
+  client:idle
+/>
+```
+
+### Shortcodes Personalizados
+- **Ubicación**: `src/layouts/shortcodes/`
+- **Auto-import**: Se importan automáticamente en MDX
+- **Props**: Define interfaces TypeScript para props
+
+```tsx
+// src/layouts/shortcodes/CallToAction.jsx
+interface Props {
+  title: string;
+  buttonText: string;
+  href?: string;
+}
+
+export default function CallToAction({ title, buttonText, href = "#" }: Props) {
+  return (
+    <div className="cta-section">
+      <h3>{title}</h3>
+      <a href={href} className="btn btn-primary">
+        {buttonText}
+      </a>
+    </div>
+  );
+}
+```
+
+## Assets e Imágenes
+
+### Astro Assets
+- **Componente Image**: Usa `<Image />` para imágenes procesables
+- **Optimización**: Define `width`, `height` y `alt` descriptivo
+- **Lazy loading**: Usa `loading="lazy"` para imágenes no críticas
+
+```astro
+---
+import { Image } from "astro:assets";
+---
+
+<Image
+  src="/images/hero-banner.png"
+  alt="Banner principal de la página de inicio"
+  width={1200}
+  height={600}
+  loading="eager"
+  format="webp"
+/>
+```
+
+### Public Assets
+- **Rutas absolutas**: Enlaces desde `/` para archivos en `public/`
+- **No procesamiento**: Los archivos en `public/` no se procesan
+- **Organización**: Mantén estructura lógica en `public/images/`
+
+```astro
+<!-- Imagen estática en public/ -->
+<img 
+  src="/images/logo.png" 
+  alt="Logo de la empresa"
+  width="150"
+  height="50"
+/>
+
+<!-- Favicon y archivos de configuración -->
+<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+```
+
+## Metadatos y SEO
+
+### Layout Base
+- **Metadatos centralizados**: Usa `Base.astro` para metadatos consistentes
+- **Props del layout**: Pasa metadatos vía props del layout
+- **Open Graph**: Completa metadatos OG/Twitter automáticamente
+
+```astro
+---
+// En Base.astro
+interface Props {
+  title: string;
+  meta_title?: string;
+  description?: string;
+  image?: string;
+  canonical?: string;
+}
+
+const { 
+  title, 
+  meta_title, 
+  description, 
+  image,
+  canonical 
+} = Astro.props;
+
+const metaTitle = meta_title || title;
+const metaDescription = description || "Descripción por defecto del sitio";
+---
+
+<html lang="es">
+  <head>
+    <title>{metaTitle}</title>
+    <meta name="description" content={metaDescription} />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content={metaTitle} />
+    <meta property="og:description" content={metaDescription} />
+    {image && <meta property="og:image" content={image} />}
+    
+    <!-- Canonical URL -->
+    {canonical && <link rel="canonical" href={canonical} />}
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+```
+
+### Structured Data
+- **JSON-LD**: Añade cuando sea apropiado para SEO
+- **Tipos comunes**: Article, Organization, WebSite, BreadcrumbList
+- **Validación**: Usa herramientas de Google para validar
+
+```astro
+---
+// En un post de blog
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": post.data.title,
+  "description": post.data.description,
+  "author": {
+    "@type": "Person",
+    "name": post.data.author || "Equipo Editorial"
+  },
+  "datePublished": post.data.pubDate.toISOString(),
+  "image": post.data.image
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+```
+
+## Slots y Contenido Estructurado
+
+### Slots Nombrados
+- **Estructura**: Usa slots para contenido organizado
+- **Flexibilidad**: Permite layouts reutilizables
+- **Fallbacks**: Proporciona contenido por defecto
+
+```astro
+---
+// Layout con slots nombrados
+interface Props {
+  title: string;
+  showSidebar?: boolean;
+}
+
+const { title, showSidebar = true } = Astro.props;
+---
+
+<BaseLayout title={title}>
+  <main class="main-content">
+    <slot name="header">
+      <h1>{title}</h1>
+    </slot>
+    
+    <div class="content-wrapper">
+      <article class="main-article">
+        <slot />
+      </article>
+      
+      {showSidebar && (
+        <aside class="sidebar">
+          <slot name="sidebar">
+            <p>Contenido de sidebar por defecto</p>
+          </slot>
+        </aside>
+      )}
+    </div>
+    
+    <slot name="footer" />
+  </main>
+</BaseLayout>
+```
+
+### Uso de Slots
+```astro
+---
+import LayoutWithSlots from "@/layouts/LayoutWithSlots.astro";
+---
+
+<LayoutWithSlots title="Página con Slots" showSidebar={true}>
+  <header slot="header">
+    <h1>Título Personalizado</h1>
+    <p>Subtítulo adicional</p>
+  </header>
+  
+  <p>Contenido principal de la página...</p>
+  
+  <aside slot="sidebar">
+    <h3>Sidebar Personalizado</h3>
+    <ul>
+      <li>Enlace 1</li>
+      <li>Enlace 2</li>
+    </ul>
+  </aside>
+  
+  <footer slot="footer">
+    <p>Footer personalizado</p>
+  </footer>
+</LayoutWithSlots>
+```
+
+## Performance y Optimización
+
+### JavaScript Mínimo
+- **Hidratación selectiva**: Solo hidrata componentes que lo necesiten
+- **Bundle splitting**: Separa dependencias pesadas del cliente
+- **Lazy loading**: Usa para componentes no críticos
+
+### CSS Crítico
+- **Inline CSS**: Mantén CSS crítico inline cuando sea necesario
+- **Layers**: Respeta la estructura de CSS layers en `src/styles/main.css`
+- **Purge**: Tailwind CSS 4 purga automáticamente CSS no usado
+
+## Antipatrones a Evitar
+
+### ❌ Hidratación Innecesaria
+```astro
+<!-- ❌ Incorrecto - Componente estático hidratado -->
+<StaticHeader client:load />
+
+<!-- ✅ Correcto - Sin hidratación para contenido estático -->
+<StaticHeader />
+```
+
+### ❌ Múltiples client:load
+```astro
+<!-- ❌ Incorrecto - Múltiples hidrataciones inmediatas -->
+<Form1 client:load />
+<Form2 client:load />
+<Form3 client:load />
+
+<!-- ✅ Correcto - Solo el formulario principal es inmediato -->
+<Form1 client:load />
+<Form2 client:idle />
+<Form3 client:visible />
+```
+
+### ❌ React para Contenido Estático
+```astro
+<!-- ❌ Incorrecto - Usar React para contenido estático -->
+<StaticContent client:load />
+
+<!-- ✅ Correcto - Componente Astro nativo -->
+<StaticContent />
+```
+
+## Comandos de Desarrollo
+
+### Scripts Disponibles
+```bash
+# Desarrollo local
+pnpm dev          # Puerto 4321
+
+# Build de producción
+pnpm build        # Genera dist/
+
+# Preview del build
+pnpm preview      # Servidor local para probar build
+
+# Verificación de tipos
+pnpm check        # TypeScript check
+
+# Formateo de código
+pnpm format       # Prettier + plugins
+```
+
+### Verificaciones Pre-commit
+```bash
+# Checklist completo
+pnpm check && pnpm build && pnpm format
+```
+
+---
+
+**Recuerda**: Astro es un framework de "menos JavaScript por defecto". Usa React solo cuando realmente necesites interactividad, y aprovecha el renderizado estático para el resto del contenido.
+description:
+globs:
+alwaysApply: false
+---

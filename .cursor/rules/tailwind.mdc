@@ -1,0 +1,403 @@
+# Reglas de Tailwind CSS 4 para Pinwheel Astro
+
+## Metodología CSS
+
+### CSS Layers
+- **Estructura respetada**: Respeta la estructura de `src/styles/main.css`
+- **Orden de layers**: `@layer base`, `@layer components`, `@layer utilities`
+- **Componentes**: Usa `@apply` SOLO en `src/styles/components.css`
+
+```css
+/* src/styles/main.css */
+@layer base {
+  /* Estilos base y reset */
+}
+
+@layer components {
+  /* Componentes personalizados */
+}
+
+@layer utilities {
+  /* Utilidades personalizadas */
+}
+```
+
+### Prioridad de Clases
+- **Utilidades primero**: Prioriza clases utilitarias de Tailwind
+- **Componentes**: Usa clases de componente cuando sea apropiado
+- **CSS personalizado**: Solo cuando las utilidades no sean suficientes
+
+## Sistema de Grid Híbrido
+
+### Bootstrap Grid + Tailwind Flex
+- **Contenedor estándar**: Usa `container` para ancho máximo
+- **Sistema de filas**: Usa `row` para contenedores flexibles
+- **Columnas responsive**: Usa `lg:col-6` para breakpoints
+
+```astro
+<!-- Contenedor estándar -->
+<div class="container">
+  <div class="row items-center">
+    <div class="lg:col-6">
+      <h2>Contenido Principal</h2>
+      <p>Descripción del contenido...</p>
+    </div>
+    <div class="lg:col-6">
+      <img src="/images/feature.png" alt="Característica" />
+    </div>
+  </div>
+</div>
+
+<!-- Grid de 3 columnas -->
+<div class="container">
+  <div class="row">
+    <div class="md:col-4">
+      <div class="feature-card">Característica 1</div>
+    </div>
+    <div class="md:col-4">
+      <div class="feature-card">Característica 2</div>
+    </div>
+    <div class="md:col-4">
+      <div class="feature-card">Característica 3</div>
+    </div>
+  </div>
+</div>
+```
+
+### Breakpoints Responsivos
+- **Mobile-first**: Comienza con estilos móviles
+- **Progresivo**: Añade estilos para pantallas más grandes
+- **Breakpoints**: `sm:`, `md:`, `lg:`, `xl:`, `2xl:`
+
+```astro
+<!-- Ejemplo de responsive design -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div class="bg-white p-6 rounded-lg shadow-md">
+    <h3 class="text-lg font-semibold mb-3">Título</h3>
+    <p class="text-gray-600">Contenido...</p>
+  </div>
+</div>
+```
+
+## Clases de Componente
+
+### Botones
+- **Clases base**: Usa `btn` como clase base
+- **Variantes**: `btn-primary`, `btn-white`, `btn-outline`
+- **Tamaños**: `btn-sm`, `btn-lg`
+
+```astro
+<!-- Botones estándar -->
+<a href="/contact" class="btn btn-primary">Contactar</a>
+<a href="/learn-more" class="btn btn-white btn-sm">Saber Más</a>
+<button type="submit" class="btn btn-outline">Enviar</button>
+```
+
+### Tarjetas
+- **Clases base**: Usa `card` para contenedores de tarjeta
+- **Variantes**: `card-feature`, `card-blog`, `card-testimonial`
+- **Elementos**: `card-header`, `card-body`, `card-footer`
+
+```astro
+<!-- Tarjeta de característica -->
+<div class="card card-feature">
+  <div class="card-header">
+    <h3 class="text-xl font-semibold">Título de Característica</h3>
+  </div>
+  <div class="card-body">
+    <p class="text-gray-600">Descripción de la característica...</p>
+  </div>
+</div>
+```
+
+### Formularios
+- **Inputs**: Usa `form-input` para campos de entrada
+- **Labels**: Usa `form-label` para etiquetas
+- **Grupos**: Usa `form-group` para agrupar elementos
+
+```astro
+<!-- Campo de formulario -->
+<div class="form-group">
+  <label for="email" class="form-label">Email</label>
+  <input 
+    type="email" 
+    id="email" 
+    name="email" 
+    class="form-input" 
+    placeholder="tu@email.com"
+    required
+  />
+</div>
+```
+
+## Utilidades Personalizadas
+
+### Espaciado y Layout
+- **Contenedores**: Usa `container` para ancho máximo
+- **Secciones**: Usa `section` para secciones de página
+- **Wrappers**: Usa `wrapper` para contenido centrado
+
+```astro
+<!-- Estructura de página estándar -->
+<section class="section">
+  <div class="container">
+    <div class="wrapper">
+      <h1 class="text-4xl font-bold text-center mb-8">Título Principal</h1>
+      <p class="text-xl text-gray-600 text-center max-w-3xl mx-auto">
+        Descripción del contenido principal...
+      </p>
+    </div>
+  </div>
+</section>
+```
+
+### Tipografía
+- **Títulos**: Usa clases de tamaño apropiadas
+- **Texto**: Usa colores de texto semánticos
+- **Enlaces**: Usa `link` para enlaces internos
+
+```astro
+<!-- Jerarquía de títulos -->
+<h1 class="text-4xl font-bold text-gray-900 mb-4">Título H1</h1>
+<h2 class="text-3xl font-semibold text-gray-800 mb-3">Título H2</h2>
+<h3 class="text-2xl font-medium text-gray-700 mb-2">Título H3</h3>
+
+<!-- Texto y enlaces -->
+<p class="text-gray-600 mb-4">
+  Párrafo de texto con 
+  <a href="/enlace" class="link">enlace interno</a> 
+  y más contenido.
+</p>
+```
+
+## Estados y Interacciones
+
+### Estados de Focus
+- **Siempre visibles**: Incluye estados focus visibles
+- **Accesibilidad**: Asegura contraste suficiente (AA mínimo)
+- **Consistencia**: Mantén estados focus consistentes
+
+```astro
+<!-- Botón con estados focus -->
+<button class="btn btn-primary focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+  Botón con Focus
+</button>
+
+<!-- Input con focus -->
+<input 
+  type="text" 
+  class="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+  placeholder="Escribe aquí..."
+/>
+```
+
+### Estados de Hover
+- **Transiciones suaves**: Usa `transition` para cambios de estado
+- **Feedback visual**: Proporciona feedback claro al usuario
+- **Consistencia**: Mantén patrones de hover consistentes
+
+```astro
+<!-- Enlace con hover -->
+<a href="/enlace" class="link hover:text-blue-600 transition-colors duration-200">
+  Enlace con Hover
+</a>
+
+<!-- Botón con hover -->
+<button class="btn btn-primary hover:bg-blue-700 transition-colors duration-200">
+  Botón con Hover
+</button>
+```
+
+## Variables CSS Personalizadas
+
+### Tema y Colores
+- **Variables del tema**: Usa variables definidas en `tw-theme.js`
+- **Colores semánticos**: Usa nombres de color descriptivos
+- **Consistencia**: Mantén paleta de colores consistente
+
+```css
+/* src/styles/components.css */
+.btn-primary {
+  @apply bg-blue-600 text-white;
+  background-color: var(--color-primary);
+}
+
+.btn-white {
+  @apply bg-white text-gray-900 border border-gray-300;
+  background-color: var(--color-white);
+}
+```
+
+### Espaciado y Tamaños
+- **Variables de espaciado**: Usa variables para espaciado consistente
+- **Breakpoints**: Usa variables para breakpoints personalizados
+- **Tipografía**: Usa variables para tamaños de fuente
+
+```css
+/* Variables de espaciado */
+.section {
+  padding: var(--spacing-section-y) 0;
+}
+
+.container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--spacing-container-x);
+}
+```
+
+## Antipatrones a Evitar
+
+### ❌ CSS Inline
+```astro
+<!-- ❌ Incorrecto - CSS inline -->
+<div style="background-color: #f3f4f6; padding: 2rem; border-radius: 0.5rem;">
+  Contenido
+</div>
+
+<!-- ✅ Correcto - Clases de Tailwind -->
+<div class="bg-gray-100 p-8 rounded-lg">
+  Contenido
+</div>
+```
+
+### ❌ Duplicar Utilidades
+```css
+/* ❌ Incorrecto - Duplicar utilidades existentes */
+.custom-button {
+  @apply bg-blue-600 text-white px-4 py-2 rounded;
+  /* Estas clases ya existen en Tailwind */
+}
+
+/* ✅ Correcto - Crear variante específica */
+.btn-custom {
+  @apply btn btn-primary;
+  /* Extiende el componente btn existente */
+}
+```
+
+### ❌ Clases !important
+```css
+/* ❌ Incorrecto - Usar !important */
+.important-text {
+  @apply text-red-500 !important;
+}
+
+/* ✅ Correcto - Usar especificidad CSS */
+.important-text {
+  @apply text-red-500;
+  color: var(--color-error) !important; /* Solo si es absolutamente necesario */
+}
+```
+
+## Organización de Estilos
+
+### Archivos CSS
+- **main.css**: Importa todos los archivos CSS
+- **components.css**: Estilos de componentes personalizados
+- **utilities.css**: Utilidades personalizadas
+- **base.css**: Estilos base y reset
+
+```css
+/* src/styles/main.css */
+@import "base.css";
+@import "components.css";
+@import "utilities.css";
+@import "buttons.css";
+@import "navigation.css";
+@import "safe.css";
+```
+
+### Estructura de Componentes
+```css
+/* src/styles/components.css */
+
+/* Botones */
+.btn {
+  @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium transition-colors duration-200;
+}
+
+.btn-primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+
+/* Tarjetas */
+.card {
+  @apply bg-white rounded-lg shadow-md overflow-hidden;
+}
+
+.card-header {
+  @apply px-6 py-4 border-b border-gray-200;
+}
+
+.card-body {
+  @apply px-6 py-4;
+}
+```
+
+## Responsive Design
+
+### Mobile-First Approach
+- **Base móvil**: Comienza con estilos para móviles
+- **Breakpoints progresivos**: Añade estilos para pantallas más grandes
+- **Contenido adaptativo**: Ajusta layout según el tamaño de pantalla
+
+```astro
+<!-- Ejemplo mobile-first -->
+<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+  <div class="card">
+    <h3 class="text-lg md:text-xl lg:text-2xl">Título</h3>
+    <p class="text-sm md:text-base">Contenido...</p>
+  </div>
+</div>
+```
+
+### Breakpoints Específicos
+- **sm**: 640px y superior
+- **md**: 768px y superior
+- **lg**: 1024px y superior
+- **xl**: 1280px y superior
+- **2xl**: 1536px y superior
+
+## Accesibilidad
+
+### Contraste y Legibilidad
+- **Contraste AA**: Mínimo 4.5:1 para texto normal
+- **Contraste AAA**: 7:1 para texto pequeño
+- **Colores semánticos**: Usa colores que transmitan significado
+
+### Estados de Focus
+- **Focus visible**: Siempre incluye estados focus visibles
+- **Skip links**: Proporciona enlaces para saltar contenido
+- **Navegación por teclado**: Asegura navegación completa por teclado
+
+## Comandos de Desarrollo
+
+### Build y Optimización
+```bash
+# Desarrollo
+pnpm dev
+
+# Build de producción
+pnpm build
+
+# Formateo de código
+pnpm format
+```
+
+### Verificación de CSS
+```bash
+# Verificar que el build funcione
+pnpm build
+
+# Verificar tipos
+pnpm check
+```
+
+---
+
+**Recuerda**: Tailwind CSS 4 es una herramienta poderosa para crear interfaces consistentes y mantenibles. Usa las utilidades existentes antes de crear CSS personalizado, y mantén la consistencia en todo el proyecto.
+description:
+globs:
+alwaysApply: false
+---

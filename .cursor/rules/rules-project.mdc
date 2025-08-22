@@ -1,0 +1,70 @@
+# Reglas del Proyecto Pinwheel Astro
+
+## Resumen de Reglas
+
+Este proyecto sigue un conjunto completo de reglas organizadas en archivos específicos:
+
+### 📋 Reglas Principales
+- **`pinwheel-astro.mdc`** - Reglas generales del proyecto y stack tecnológico
+- **`typescript.mdc`** - Reglas específicas de TypeScript
+- **`astro.mdc`** - Reglas específicas de Astro 5
+- **`tailwind.mdc`** - Reglas específicas de Tailwind CSS 4
+
+## Comandos Esenciales
+
+### Desarrollo
+```bash
+pnpm dev          # Puerto 4321
+pnpm build        # Build de producción
+pnpm preview      # Preview del build
+pnpm check        # Verificación TypeScript
+pnpm format       # Formateo de código
+```
+
+### Pre-commit Checklist
+```bash
+pnpm check && pnpm build && pnpm format
+```
+
+## Stack Tecnológico
+
+- **Framework**: Astro 5.x con Vite 7
+- **UI**: Tailwind CSS 4 + Bootstrap Grid System
+- **Tipado**: TypeScript estricto
+- **Gestión**: PNPM (requerido)
+- **Hosting**: Sitio estático (SSG)
+
+## Estructura del Proyecto
+
+```
+src/
+├── pages/           # Rutas de Astro
+├── layouts/         # Layouts y componentes
+├── content/         # Colecciones de contenido
+├── lib/             # Utilidades y helpers
+├── styles/          # CSS layers y utilidades
+└── config/          # Archivos de configuración
+```
+
+## Alias de Importación
+
+- `@/components/*` → `src/layouts/components/*`
+- `@/partials/*` → `src/layouts/partials/*`
+- `@/shortcodes/*` → `src/layouts/shortcodes/*`
+- `@/*` → `src/*`
+
+## Principios Clave
+
+1. **TypeScript estricto** - No uses `any`
+2. **Menos JavaScript** - React solo para interactividad
+3. **CSS utilities-first** - Prioriza Tailwind sobre CSS personalizado
+4. **Consistencia** - Mantén convenciones del proyecto
+5. **Accesibilidad** - Estados focus visibles y contraste adecuado
+
+---
+
+**Para reglas detalladas, consulta los archivos específicos en `.cursor/rules/`**
+description:
+globs:
+alwaysApply: false
+---

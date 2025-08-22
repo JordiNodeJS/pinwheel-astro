@@ -1,0 +1,67 @@
+name: Pinwheel Astro Project Rules
+version: 1
+
+tasks:
+  - match: "**/*"
+    rules:
+      coding_style:
+        - "Respeta indentación y formato existente; no reformat masivo"
+        - "Usa TypeScript estricto; evita 'any' y 'as unknown as'"
+        - "Nombres descriptivos (funciones: verbos; variables: sustantivos)"
+        - "Añade tipos a props y exports públicos"
+      imports:
+        - "Usa alias de tsconfig: '@/components', '@/partials', '@/'"
+        - "Evita rutas relativas profundas (../../..)"
+      astro:
+        - "Usa layouts existentes (src/layouts/Base.astro, Default.astro)"
+        - "Añade islas sólo si hay interactividad (client:* apropiado)"
+        - "Considera server:defer para contenido server-side no crítico"
+      mdx:
+        - "Permite componentes UI en MDX; no olvidar client:* si interactivo"
+        - "No dupliques auto-imports definidos en astro.config.mjs"
+      content_collections:
+        - "Edita esquemas en src/content.config.ts con zod"
+        - "Usa getEntry/getCollection con tipos CollectionEntry<>"
+      assets:
+        - "Usa astro:assets <Image/> para imágenes procesadas"
+        - "Assets de public/ con rutas absolutas desde /"
+      tailwind:
+        - "Evita estilos inline; prefiere utilidades Tailwind y estilos en src/styles"
+        - "Asegura estados focus y contraste (accesibilidad)"
+      seo_accessibility:
+        - "Mantén metadatos vía Base.astro; no dupliques etiquetas SEO"
+        - "HTML semántico, alt descriptivo, roles/aria cuando aplique"
+      config_management:
+        - "Centraliza nuevas opciones en src/config/*.json con defaults"
+        - "Respeta google_tag_manager desde config.json"
+      performance:
+        - "Minimiza JS en cliente; divide islas y difiere cuando posible"
+        - "Reutiliza utilidades de src/lib/utils antes de crear nuevas"
+      commits_prs:
+        - "Commits en inglés (Conventional Commits)"
+        - "Ejecuta pnpm check/build/format antes de PR"
+      language:
+        - "Responde en español; mensajes de commit en inglés"
+
+scenarios:
+  - when: "Crear nueva página"
+    then:
+      - "Colocar archivo en src/pages con .astro"
+      - "Usar <Base> como layout contenedor"
+      - "Cargar datos con astro:content si aplica (getEntry/getCollection)"
+  - when: "Agregar componente interactivo"
+    then:
+      - "Crear componente React sólo si requiere interactividad"
+      - "Hidratar con client:load/visible/idle según prioridad"
+  - when: "Agregar contenido"
+    then:
+      - "Seguir esquema de src/content.config.ts"
+      - "Usar archivos -index.md(x) para raíz de colección"
+
+commands:
+  pre_commit:
+    - "pnpm check"
+    - "pnpm build"
+    - "pnpm format"
+
+
